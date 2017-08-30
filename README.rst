@@ -5,5 +5,4 @@ A package used to compare between different word embeddings (including their hyp
 for short text classification. Some sample datasets are provided.
 
 ----
-
 Examples:
