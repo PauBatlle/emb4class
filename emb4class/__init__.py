@@ -1,3 +1,1 @@
-
-def s():
-    pass
+__all__ = ["prova"]
