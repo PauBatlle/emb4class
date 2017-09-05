@@ -10,7 +10,7 @@ from tqdm import tqdm
 
 def write_vocabulary(dataset, options):
     """ Create the vocabulary according to the options if not already found. The vocabulary is created with the embedding part of the whole dataset ''"""
-    dataset.directory = "Data_obtained/"+dataset.type+"/"+str(options)+"/"
+    dataset.directory = "Data_obtained"+dataset.type+"/"+str(options)+"/"
     if os.path.exists(dataset.directory):
         print("Vocabulary already found!")
         #Read from file
@@ -48,8 +48,8 @@ def write_vocabulary(dataset, options):
     """
     Apply min-count
     """
-    eliminate = lambda x: [i for i in x if i in dataset.vocabulary]
-    dataset.separated_emb = [eliminate(o) for o in dataset.separated_emb]
+    words_to_keep = lambda x: [i for i in x if i in dataset.vocabulary]
+    dataset.separated_emb = [words_to_keep(o) for o in dataset.separated_emb]
     """
     Apply lemmatizer
     """

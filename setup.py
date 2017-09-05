@@ -14,7 +14,7 @@ setup(name='emb4class',
       author='Pau Batlle',
       author_email='pau.batlle@estudiant.upc.edu',
       license='MIT',
-      install_requires = ["numpy", "tensorflow", "matplotlib", "seaborn", "scikit-learn", "nltk"],
+      install_requires = ["numpy", "tensorflow", "matplotlib", "seaborn", "scikit-learn", "nltk", "tqdm"],
       packages=find_packages(),
       python_requires = '>=3.3',
       classifiers=['Development Status :: 3 - Alpha'])

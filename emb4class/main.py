@@ -36,11 +36,12 @@ class Vocabulary_options():
 
 class General_options():
     def __init__ (self, learning_rate = 0.01, training_epochs=2500, batch_size = 100,
-        display_step = 1):
+        display_step = 1, window_sizes_to_try = [1,3,-1]):
         self.learning_rate = learning_rate
         self.training_epochs = training_epochs
         self.batch_size = batch_size
         self.display_step = display_step
+        self.window_sizes_to_try = window_sizes_to_try
 
 class Metric_learning_options():
     def __init__ (self, learning_rate = 0.01, training_epochs = 100, display_step = 1):
