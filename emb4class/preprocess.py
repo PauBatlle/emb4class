@@ -28,12 +28,12 @@ class Dataset():
         label_titles = read_txt(self.path+"/label_titles.txt")
         labels = read_txt(self.path+"/labels.txt").astype(int)
         sentences = read_txt(self.path+"/titles.txt")
+        sentences, labels = shuffle(sentences, labels)
         self.num_labels = np.max(labels)+1
         return label_titles, labels, sentences
 
     def divide(self):
         """ Divides the already read dataset into embedding, training and test set """
-        #titles, labels = shuffle(self.sentences, self.labels)
         titles, labels = self.sentences, self.labels
         #40% for embedding set, 40% for training set, 20% for test set
         #Note that to change the sizes you also need to make sure that no vocbulary files

@@ -30,11 +30,11 @@ def write_vocabulary(dataset, options):
     #Tokenize
     print("Tokenizing sentences")
     print("Embedding set")
-    dataset.separated_emb = [tokenizer(i) for i in tqdm(dataset.embset[0])]
+    dataset.separated_emb = np.array([tokenizer(i) for i in tqdm(dataset.embset[0])])
     print("Training set")
-    dataset.separated_train = [tokenizer(i) for i in tqdm(dataset.trainset[0])]
+    dataset.separated_train = np.array([tokenizer(i) for i in tqdm(dataset.trainset[0])])
     print("Test set")
-    dataset.separated_test = [tokenizer(i) for i in tqdm(dataset.testset[0])]
+    dataset.separated_test = np.array([tokenizer(i) for i in tqdm(dataset.testset[0])])
     words = np.concatenate(dataset.separated_emb)
     #Count word occurences
     print("Counting word occurences")
@@ -49,7 +49,7 @@ def write_vocabulary(dataset, options):
     Apply min-count
     """
     words_to_keep = lambda x: [i for i in x if i in dataset.vocabulary]
-    dataset.separated_emb = [words_to_keep(o) for o in dataset.separated_emb]
+    dataset.separated_emb = np.array([words_to_keep(o) for o in dataset.separated_emb])
     """
     Apply lemmatizer
     """
@@ -58,7 +58,7 @@ def write_vocabulary(dataset, options):
         wordnet_lemmatizer = WordNetLemmatizer()
         pos = 'v' if options.hard_lemmatizer else 'n'
         lemmatize = lambda x: [wordnet_lemmatizer.lemmatize(i, pos = pos) for i in x]
-        dataset.separated_emb = [lemmatize(u) for u in dataset.separated_emb]
+        dataset.separated_emb = np.array([lemmatize(u) for u in dataset.separated_emb])
     """
     Apply stop-word Removal
     """
@@ -66,7 +66,7 @@ def write_vocabulary(dataset, options):
         from nltk.corpus import stopwords
         eliminated_words = set(stopwords.words('english'))
         eliminate = lambda x: [i for i in x if i not in eliminated_words]
-        dataset.separated_emb = [eliminate(o) for o in dataset.separated_emb]
+        dataset.separated_emb = np.array([eliminate(o) for o in dataset.separated_emb])
     """
     Apply subsampling
     """
@@ -80,10 +80,11 @@ def write_vocabulary(dataset, options):
             if np.random.rand() < p_removal:
                 eliminated_words.append(pair[0])
         eliminate = lambda x: [i for i in x if i not in eliminated_words]
-        dataset.separated_emb = [eliminate(o) for o in dataset.separated_emb]
+        dataset.separated_emb = np.array([eliminate(o) for o in dataset.separated_emb])
 
     #Delete empty sentences
-    dataset.separated_emb = [i for i in dataset.separated_emb if len(i) > 0]
+    assert len(dataset.separated_emb) == len(dataset.embset[0])
+    #dataset.separated_emb = [i for i in dataset.separated_emb if len(i) > 0]
 
     #If at least one of Lemmatizer, Stop-Word removal or subsampling was True, we need to recalculate counts
     if options.subsampling or options.stop_word_removal or options.lemmatizer:
@@ -91,8 +92,8 @@ def write_vocabulary(dataset, options):
         words = np.concatenate(dataset.separated_emb)
         count = collections.Counter(words).most_common()
         #eliminate words appearing less than min_count times
-        dataset.frequences = [w for w in count if w[1] >= options.min_count]
-        dataset.vocabulary = [w[0] for w in dataset.frequences]
+        dataset.frequences = np.array([w for w in count if w[1] >= options.min_count])
+        dataset.vocabulary = np.array([w[0] for w in dataset.frequences])
         #Convert to dictionary for easier access
         dataset.frequences = dict(dataset.frequences)
 

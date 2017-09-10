@@ -1,73 +1,79 @@
-import matplotlib.pyplot as plt
 import numpy as np
-from sklearn.feature_extraction.text import TfidfVectorizer
-import sklearn.preprocessing as pre
+from tqdm import tqdm as t
 import tensorflow as tf
+import matplotlib.pyplot as plt
+from IPython import embed
+#We assume X already normalized
 
-#We assume X_train, X_test already normalized
-class Metric_learning():
-
-    def __init__():
-        pass
+class Metric_Learning():
+    """Class to perform Metric_Learning"""
+    def __init__(self, options, embedded_sentences, labels, directory):
+        self.opt = options
+        self.dir = directory
+        self.X = embedded_sentences
+        self.Y = labels
+        self.create_graph()
+        self.train()
 
     def create_graph(self):
-        self.qry = tf.placeholder(tf.float32, [1, dim])
-        self.pos = tf.placeholder(tf.float32, [1, dim])
-        self.neg = tf.placeholder(tf.float32, [1, dim])
+        self.nsamples, self.dim = self.X.shape
+        self.qry = tf.placeholder(tf.float32, [1, self.dim])
+        self.pos = tf.placeholder(tf.float32, [1, self.dim])
+        self.neg = tf.placeholder(tf.float32, [1, self.dim])
 
         # The embedding parameters
         # Projection matrix
-        self.W = tf.Variable(tf.random_normal([dim, hidden]))
+        self.W = tf.Variable(tf.random_normal([self.dim, self.opt.embedding_size]))
         # We also add a bias term
-        self.b = tf.Variable(tf.zeros([hidden]))
+        self.b = tf.Variable(tf.zeros([self.opt.embedding_size]))
 
         # Function to embed the inputs
-        self.eqry = tf.matmul(qry, W) + b
-        self.epos = tf.matmul(pos, W) + b
-        self.eneg = tf.matmul(neg, W) + b
+        self.eqry = tf.matmul(self.qry, self.W) + self.b
+        self.epos = tf.matmul(self.pos, self.W) + self.b
+        self.eneg = tf.matmul(self.neg, self.W) + self.b
 
         # Define triplet loss in the space of the embeddings
-        self.cost = tf.maximum(0.0, 1 + tf.matmul(eqry, tf.transpose(tf.subtract(eneg, epos))))
+        self.cost = tf.maximum(0.0, 1 + tf.matmul(self.eqry, tf.transpose(tf.subtract(self.eneg, self.epos))))
         # Gradient Descent Optimizer
-        self.optimizer = tf.train.GradientDescentOptimizer(self.learning_rate).minimize(self.cost)
+        self.optimizer = tf.train.GradientDescentOptimizer(self.opt.learning_rate).minimize(self.cost)
         return
 
     def train(self):
         # Launch the graph
         with tf.Session() as sess:
-        # Initialize
-        sess.run(tf.global_variables_initializer())
-        # Training cycle
-        for epoch in range(training_epochs):
-            avg_cost = 0
-            # Loop over all samples
-            for i in np.arange(0, nsamples):
-                # Each "input sample" consists of a "query", a positive and a negative example
-                # This is constructed on the fly
-                # Ideally, this should be precomputed
-                # Query: take the next training example
-                x_qry = x_train[i,None]
-                # Positive: sample a training example from the same class as the query
-                idx  = np.where(labels_train == labels_train[i])[0]
-                r = np.random.randint(len(idx))
-                ipos = idx[r]
-                x_pos = x_train[ipos,None]
-                # Negative: sample a training example with a different class label
-                idx  = np.where(np.logical_not(labels_train == labels_train[i]))[0]
-                r = np.random.randint(len(idx))
-                ineg = idx[r]
-                x_neg = x_train[ineg,None]
-                # Perform gradient step
-                _, c = sess.run([optimizer, cost], feed_dict={qry: x_qry,
-                                                              pos: x_pos,
-                                                              neg: x_neg})
-                # Update loss of this epoch
-                avg_cost += c
-            # Display logs per epoch step
-            if (epoch+1) % display_step == 0:
-                print("Epoch:", epoch+1, avg_cost/nsamples)
-                What = sess.run(W)
-                bhat = sess.run(b)
-                eval_metric(What, bhat, epoch+1)
-        self.W_ = sess.run(W)
-        self.b_ = sess.run(b)
+            sess.run(tf.global_variables_initializer())
+            # Training cycle
+            avg_costs = []
+            for epoch in t(range(self.opt.training_epochs)):
+                avg_cost = 0
+                # Loop over all samples
+                for i in t(np.arange(0, self.nsamples)):
+                    # Each "input sample" consists of a "query", a positive and a negative example
+                    # This is constructed on the fly
+                    # Ideally, this should be precomputed
+                    # Query: take the next training example
+                    x_qry = self.X[i,None]
+                    # Positive: sample a training example from the same class as the query
+                    idx  = np.where(self.Y == self.Y[i])[0]
+                    r = np.random.randint(len(idx))
+                    ipos = idx[r]
+                    x_pos = self.X[ipos,None]
+                    # Negative: sample a training example with a different class label
+                    idx  = np.where(np.logical_not(self.Y == self.Y[i]))[0]
+                    r = np.random.randint(len(idx))
+                    ineg = idx[r]
+                    x_neg = self.X[ineg,None]
+                    # Perform gradient step
+                    _, c = sess.run([self.optimizer, self.cost], feed_dict={self.qry: x_qry, self.pos: x_pos, self.neg: x_neg})
+                    # Update loss of this epoch
+                    avg_cost += c/self.nsamples
+
+                # Display logs per epoch step
+                if epoch % self.opt.display_step:
+                    print("Cost at epoch",epoch,"=",avg_cost)
+                avg_costs.append(avg_cost.reshape(-1)[0])
+                plt.plot(avg_costs)
+                plt.savefig(self.dir+"loss.png")
+                plt.close()
+            self.W_ = sess.run(self.W)
+            self.b_ = sess.run(self.b)
