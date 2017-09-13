@@ -17,8 +17,25 @@ class Run_classifiers():
         self.num_labels = self.data.num_labels
         self.preprocess()
         self.onehot()
-        self.one_run("BoW", self.sentembeddings.bowavg)
-        self.classifiers_to_evaluate = ["BoW"]
+
+
+        embedding_size = self.sentembeddings.w2vopt.embedding_size
+        window = self.sentembeddings.genopt.window_size
+        iterations = self.sentembeddings.w2vopt.iterations
+        gensimoptstring = "EMSIZE="+str(embedding_size)+"-WINDOW="+str(window)+"-ITER="+str(iterations)
+
+
+
+        print("Classifier for BoW")
+        self.one_run("BoW-avg", self.sentembeddings.bowavg)
+        print("Classifier for Metric Learning")
+        self.one_run("Metric_Learning-avg"+str(self.sentembeddings.mlearnopt), self.sentembeddings.metricavg)
+        print("Classifier for Gensim W2V")
+        self.one_run("Gensim_W2V-avg"+gensimoptstring, self.sentembeddings.GensimW2Vavg)
+        print("Classifier for My W2V")
+        self.one_run("My_W2V-avg"+str(self.sentembeddings.w2vopt), self.sentembeddings.MyW2Vavg)
+
+
     def preprocess(self):
         #Create directory for classification, if necessary
         if not os.path.exists(self.data.directory+"Classifiers"):

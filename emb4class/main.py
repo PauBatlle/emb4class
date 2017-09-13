@@ -35,8 +35,8 @@ class Vocabulary_options():
 
 class General_options():
     """ General options regarding the classifier and some word embeddings """
-    def __init__ (self, learning_rate = 0.01, training_epochs=2500, batch_size = 500,
-        display_step = 500, window_size = 3, distribution_smoothing = 1, k = 5, embedding_size = 100):
+    def __init__ (self, learning_rate = 0.01, training_epochs = 4000, batch_size = 100,
+        display_step = 5000, window_size = 3, distribution_smoothing = 1, k = 5, embedding_size = 100):
         #Classifier options
         self.learning_rate = learning_rate
         self.training_epochs = training_epochs
@@ -54,7 +54,7 @@ class General_options():
 
 class Metric_learning_options():
     """ Options to run the Metric Learning implementation """
-    def __init__ (self, learning_rate = 0.01, training_epochs = 100, display_step = 10,
+    def __init__ (self, learning_rate = 0.01, training_epochs = 150, display_step = 1000,
                 embedding_size = 100):
         self.learning_rate = learning_rate
         self.training_epochs = training_epochs
@@ -67,7 +67,7 @@ class Metric_learning_options():
 class Word2Vec_options():
     """ Options to run my implemented Word2Vec """
     def __init__(self, learning_rate = 1, total_batches = 7500, batch_size = 5000,
-    display_step = 1000, embedding_size = 100, k = 5, iterations = 10):
+    display_step = 10000, embedding_size = 100, k = 5, iterations = 10):
         self.learning_rate = learning_rate
         self.total_batches = total_batches
         self.batch_size = batch_size
@@ -127,4 +127,4 @@ class Experiment():
         #Since classifier already has self.data and self.embeddings, no need to pass them again
         Evaluate(self.classifier, self.general_options)
 
-E = Experiment("Datasets/StackOverflow_20K", Vocabulary_options(), General_options(), Metric_learning_options(),Word2Vec_options())
+E = Experiment("Datasets/Barcelona_Building_Names", Vocabulary_options(), General_options(training_epochs = 4000), Metric_learning_options(training_epochs = 75), Word2Vec_options(iterations = 300))

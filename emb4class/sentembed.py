@@ -48,7 +48,7 @@ class sentence_embeddings():
 
         self.sentences_to_embed_train = self.sentences_to_embed_train[good_indexes_train]
         self.sentences_to_embed_test = self.sentences_to_embed_test[good_indexes_test]
-
+        
         self.labels_to_train = self.data.trainset[1][good_indexes_train]
         self.labels_to_test = self.data.testset[1][good_indexes_test]
 

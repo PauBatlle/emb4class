@@ -6,6 +6,7 @@ from sklearn.metrics import confusion_matrix
 import seaborn as sns
 import os
 from IPython import embed
+from ipdb import set_trace
 
 def distance_matrix(embeddings, directory, name = ""):
     """ Plot the matrix distance between words, given an embedding
@@ -23,19 +24,45 @@ def distance_matrix(embeddings, directory, name = ""):
 class Evaluate():
     def __init__(self, classifiers, general_options):
         self.classifiers = classifiers
+        self.sentembeddings = self.classifiers.sentembeddings
         self.general_options = general_options
         self.data = classifiers.data
+        self.num_labels= self.data.num_labels
         self.labels = self.classifiers.sentembeddings.labels_to_test.astype(int)
         self.preprocess()
         self.onehot()
         self.read_directory = self.data.directory+"Classifiers/"+str(self.general_options)+"/"
-        self.fully_evaluate("BoW", self.classifiers.sentembeddings.bowavgtest,
-                            W = np.load(self.read_directory+"BoW/W.npy"), b = np.load(self.read_directory+"BoW/b.npy"))
+
+
+        embedding_size = self.sentembeddings.w2vopt.embedding_size
+        window = self.sentembeddings.genopt.window_size
+        iterations = self.sentembeddings.w2vopt.iterations
+        gensimoptstring = "EMSIZE="+str(embedding_size)+"-WINDOW="+str(window)+"-ITER="+str(iterations)
+
+
+
+
+        print("Evaluating BoW")
+
+        read_W = lambda name: np.load(self.read_directory+name+"/W.npy")
+        read_b = lambda name: np.load(self.read_directory+name+"/b.npy")
+
+        self.fully_evaluate("BoW-avg", self.classifiers.sentembeddings.bowavgtest,
+                            W = read_W("BoW-avg"), b = read_b("BoW-avg"))
+        print("Evaluating Metric Learning")
+        self.fully_evaluate("Metric_Learning-avg"+str(self.sentembeddings.mlearnopt), self.classifiers.sentembeddings.metricavgtest,
+                            W = read_W("Metric_Learning-avg"+str(self.sentembeddings.mlearnopt)), b = read_b("Metric_Learning-avg"+str(self.sentembeddings.mlearnopt)))
+        print("Evaluating Gensim W2V")
+        self.fully_evaluate("Gensim_W2V-avg"+gensimoptstring, self.classifiers.sentembeddings.GensimW2Vavgtest,
+                            W = read_W("Gensim_W2V-avg"+gensimoptstring), b = read_b("Gensim_W2V-avg"+gensimoptstring))
+        print("Evaluating My W2V")
+        self.fully_evaluate("My_W2V-avg"+str(self.sentembeddings.w2vopt), self.classifiers.sentembeddings.MyW2Vavgtest,
+                            W = read_W("My_W2V-avg"+str(self.sentembeddings.w2vopt)), b = read_b("My_W2V-avg"+str(self.sentembeddings.w2vopt)))
 
     def preprocess(self):
-        if not os.path.exists(self.data.directory+"Evaluation_results"):
-            os.makedirs(self.data.directory+"Evaluation_results")
-        self.write_directory = self.data.directory+"Evaluation_results/"
+        if not os.path.exists(self.data.directory+"Evaluation_results/"+str(self.general_options)+"/"):
+            os.makedirs(self.data.directory+"Evaluation_results/"+str(self.general_options)+"/")
+        self.write_directory = sself.data.directory+"Evaluation_results/"+str(self.general_options)+"/"
 
     def onehot(self):
         """ One-hot the labels """
@@ -54,7 +81,9 @@ class Evaluate():
         num2word = self.data.vocabulary
         num2label = self.data.label_titles
         """Check if folder exists, and if not, create it"""
-        if not os.path.exists(write_dir):
+        if os.path.exists(write_dir):
+            return
+        else:
             os.makedirs(write_dir)
 
         """Auxiliary functions"""
@@ -98,11 +127,12 @@ class Evaluate():
         plt.plot(recall, precision)
         plt.title("Precision-recall")
         plt.savefig(write_dir+"precision_recall.png")
+        plt.close()
 
         """Average-precision per class and mean average precision """
 
-        color_list = plt.cm.tab20(np.linspace(0, 1, 20))
-        for i in range(20):
+        color_list = plt.cm.tab20(np.linspace(0, 1, self.num_labels))
+        for i in range(self.num_labels):
             if i == 0:
                 plt.figure(figsize=(11,13))
             plt.title("Precision recall curves for each class")
@@ -112,7 +142,8 @@ class Evaluate():
             plt.plot(recall, precision, color = color_list[i])
             plt.legend(num2label)
             plt.savefig(write_dir+"ap_per_class.png")
-            sorted_AP = sorted([(num2label[i], average_precision_score(y[:,i], y_hat[:,i])) for i in range(20)], key = lambda x: x[1], reverse = True)
+            plt.close()
+            sorted_AP = sorted([(num2label[i], average_precision_score(y[:,i], y_hat[:,i])) for i in range(self.num_labels)], key = lambda x: x[1], reverse = True)
             AP = [i[1] for i in sorted_AP]
             mAP = sum(AP)/len(AP)
 
@@ -120,7 +151,7 @@ class Evaluate():
         accuracy = np.zeros(len(num2label))
         for i in range(len(num2label)):
             accuracy[i] = M[i][i] / np.sum(M[i])
-        sorted_acc = sorted([(num2label[i], accuracy[i]) for i in range(20)], key = lambda x: x[1], reverse = True)
+        sorted_acc = sorted([(num2label[i], accuracy[i]) for i in range(self.num_labels)], key = lambda x: x[1], reverse = True)
 
         """Write results to text file"""
 

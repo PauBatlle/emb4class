@@ -10,7 +10,7 @@ from tqdm import tqdm
 
 def write_vocabulary(dataset, options):
     """ Create the vocabulary according to the options if not already found. The vocabulary is created with the embedding part of the whole dataset ''"""
-    dataset.directory = "Data_obtained"+dataset.type+"/"+str(options)+"/"
+    dataset.directory = "New_Data_obtained"+dataset.type+"/"+str(options)+"/"
     if os.path.exists(dataset.directory):
         print("Vocabulary already found!")
         #Read from file

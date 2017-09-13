@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import os
 
 def shuffle(X,Y):
     """ Shuffle two different numpy arrays according to the same indexes """
@@ -38,6 +39,16 @@ class Dataset():
         #40% for embedding set, 40% for training set, 20% for test set
         #Note that to change the sizes you also need to make sure that no vocbulary files
         #(i.e Data_obtained/Dataset/Options) are left
+
+        if os.path.exists("Data_obtained"+self.type):
+            if os.path.isfile("Data_obtained"+self.type+"/embset.npy"):
+                print("Separation into three sets already found")
+                self.embset = np.load("Data_obtained"+self.type+"/embset.npy")
+                self.trainset = np.load("Data_obtained"+self.type+"/trainset.npy")
+                self.testset = np.load("Data_obtained"+self.type+"/testset.npy")
+                return
+        else:
+            os.makedirs("Data_obtained"+self.type)
         size1 = self.length*4//10
         size2 = size1
         size3 = self.length - size1 - size2
@@ -46,5 +57,8 @@ class Dataset():
         print("Training set:", size2, "sentences")
         print("Test set:", size3, "sentences")
         self.embset = np.array([titles[:size1],labels[:size1]])
+        np.save("Data_obtained"+self.type+"/embset.npy", self.embset)
         self.trainset = np.array([titles[size1:size1+size2], labels[size1:size1+size2]])
+        np.save("Data_obtained"+self.type+"/trainset.npy", self.trainset)
         self.testset = np.array([titles[size1+size2:], labels[size1+size2:]])
+        np.save("Data_obtained"+self.type+"/testset.npy", self.testset)
